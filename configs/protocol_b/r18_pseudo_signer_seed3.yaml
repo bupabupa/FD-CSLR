@@ -1,0 +1,75 @@
+feeder: dataset.dataloader_video.BaseFeeder
+phase: train
+dataset: phoenix14
+split_manifest: ./preprocess/phoenix2014/split_manifest.json
+num_epoch: 40
+work_dir: ./work_dir/fd_xmp_v3/B_protocol/resnet18/pseudo_signer/seed3/
+batch_size: 2
+random_seed: 3
+test_batch_size: 8
+num_worker: 10
+device: 0
+log_interval: 50
+eval_interval: 1
+save_interval: 5
+evaluate_tool: sclite
+loss_weights:
+  SeqCTC: 1.0
+  ConvCTC: 1.0
+  ProtoAlign: 0.01
+  SignerCE: 0.01
+  SignerAdv: 0.01
+  SignerReg: 0.0001
+  SignerInv: 0.05
+  SignerOrth: 0.0001
+optimizer_args:
+  optimizer: Adam
+  base_lr: 0.0001
+  step:
+  - 20
+  - 35
+  learning_ratio: 1
+  weight_decay: 0.0001
+  start_epoch: 0
+  nesterov: false
+  grad_clip_norm: 5.0
+feeder_args:
+  mode: train
+  datatype: video
+  num_gloss: -1
+  drop_ratio: 1.0
+  signer_map_path: preprocess/phoenix2014/pseudo_signers/seed3/signer_map.json
+model: fd_xmp_network.FDXMPModel
+decode_mode: beam
+model_args:
+  num_classes: 1296
+  c2d_type: resnet18
+  conv_type: 2
+  use_bn: 1
+  share_classifier: true
+  weight_norm: true
+  proto_enabled: true
+  proto_momentum: 0.9
+  proto_confidence: 0.1
+  proto_temperature: 0.1
+  proto_gate_init: 0.05
+  proto_align_weight: 0.01
+  proto_align_warmup_epochs: 5
+  proto_mode: cosine
+  proto_variance_shrinkage: 0.1
+  proto_variance_floor: 0.0001
+  class_prior_path: ./preprocess/phoenix2014/train_prior_split0.npy
+  prior_tau: 0.0
+  fdgc_enabled: true
+  fdgc_tau_max: 2.0
+  fdgc_delta_max: 0.5
+  fdgc_blank_bias_max: 1.0
+  signer_film: true
+  max_signer_id: 31
+  signer_rank: 4
+  signer_adversarial_strength: 0.1
+  signer_inv_temperature: 0.1
+  signer_inv_queue_size: 2048
+  signer_inv_confidence: 0.1
+  signer_inv_min_mass: 0.05
+checkpoint_split: cal

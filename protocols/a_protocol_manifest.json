@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "protocol": "A",
+  "split_sha256": "3488f9974636304f480e9e1ab7dd273f75d14ea461a8e769aa21dec72fdd7a91",
+  "split_manifest": "preprocess/phoenix2014/split_manifest.json",
+  "num_epochs": 40,
+  "num_classes": 1296,
+  "seeds": [0, 1, 2],
+  "calibration_split": "cal",
+  "checkpoint_selection_split": "cal",
+  "selection_split": "sel",
+  "test_policy": "single_access_after_candidate_lock",
+  "jobs": [
+    {
+      "name": "baseline_seed0",
+      "role": "baseline",
+      "seed": 0,
+      "base_config": "configs/baseline_split.yaml",
+      "config": "configs/protocol_a/baseline_seed0.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/baseline/seed0"
+    },
+    {
+      "name": "baseline_seed1",
+      "role": "baseline",
+      "seed": 1,
+      "base_config": "configs/baseline_split.yaml",
+      "config": "configs/protocol_a/baseline_seed1.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/baseline/seed1"
+    },
+    {
+      "name": "baseline_seed2",
+      "role": "baseline",
+      "seed": 2,
+      "base_config": "configs/baseline_split.yaml",
+      "config": "configs/protocol_a/baseline_seed2.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/baseline/seed2"
+    },
+    {
+      "name": "vac_ctc_seed0",
+      "role": "vac_ctc",
+      "seed": 0,
+      "base_config": "configs/vac_ctc_split.yaml",
+      "config": "configs/protocol_a/vac_ctc_seed0.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/vac_ctc/seed0"
+    },
+    {
+      "name": "vac_ctc_seed1",
+      "role": "vac_ctc",
+      "seed": 1,
+      "base_config": "configs/vac_ctc_split.yaml",
+      "config": "configs/protocol_a/vac_ctc_seed1.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/vac_ctc/seed1"
+    },
+    {
+      "name": "vac_ctc_seed2",
+      "role": "vac_ctc",
+      "seed": 2,
+      "base_config": "configs/vac_ctc_split.yaml",
+      "config": "configs/protocol_a/vac_ctc_seed2.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/vac_ctc/seed2"
+    },
+    {
+      "name": "vac_smkd_seed0",
+      "role": "vac_smkd",
+      "seed": 0,
+      "base_config": "configs/vac_smkd_split.yaml",
+      "config": "configs/protocol_a/vac_smkd_seed0.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/vac_smkd/seed0"
+    },
+    {
+      "name": "vac_smkd_seed1",
+      "role": "vac_smkd",
+      "seed": 1,
+      "base_config": "configs/vac_smkd_split.yaml",
+      "config": "configs/protocol_a/vac_smkd_seed1.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/vac_smkd/seed1"
+    },
+    {
+      "name": "vac_smkd_seed2",
+      "role": "vac_smkd",
+      "seed": 2,
+      "base_config": "configs/vac_smkd_split.yaml",
+      "config": "configs/protocol_a/vac_smkd_seed2.yaml",
+      "work_dir": "work_dir/fd_xmp_v3/A_protocol/vac_smkd/seed2"
+    }
+  ]
+}

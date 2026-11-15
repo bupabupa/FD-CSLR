@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "protocol": "B",
+  "split_sha256": "3488f9974636304f480e9e1ab7dd273f75d14ea461a8e769aa21dec72fdd7a91",
+  "split_manifest": "preprocess/phoenix2014/split_manifest.json",
+  "num_epochs": 40,
+  "num_classes": 1296,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "calibration_split": "cal",
+  "checkpoint_selection_split": "cal",
+  "selection_split": "sel",
+  "test_policy": "single_access_after_candidate_lock",
+  "selection_rule": "all model, checkpoint, calibration, threshold, prior, ensemble and ablation choices use D_cal; each frozen candidate is evaluated once on D_sel; D_test remains locked",
+  "seed_aggregation": "report mean, standard deviation and utterance-paired bootstrap confidence intervals over seeds 0-4; never select the best seed",
+  "primary_metric": "wer",
+  "secondary_metrics": [
+    "uwer",
+    "class_balanced_error",
+    "micro_f1",
+    "macro_f1",
+    "head_recall",
+    "middle_recall",
+    "tail_recall"
+  ],
+  "experiments": [
+    {
+      "name_template": "r18_baseline_seed{seed}",
+      "role": "baseline",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "same split SeqCTC-only control",
+      "base_config": "configs/baseline_split.yaml",
+      "config_template": "configs/protocol_b/r18_baseline_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/baseline/seed{seed}"
+    },
+    {
+      "name_template": "r18_vac_ctc_seed{seed}",
+      "role": "vac_ctc",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "VAC README SeqCTC plus ConvCTC control",
+      "base_config": "configs/vac_ctc_split.yaml",
+      "config_template": "configs/protocol_b/r18_vac_ctc_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/vac_ctc/seed{seed}"
+    },
+    {
+      "name_template": "r18_weighted_ctc_seed{seed}",
+      "role": "weighted_ctc",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "normalized class-weighted CTC ablation",
+      "base_config": "configs/fdxmp_weighted_ctc_split.yaml",
+      "config_template": "configs/protocol_b/r18_weighted_ctc_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/weighted_ctc/seed{seed}",
+      "overrides": {
+        "model_args": {
+          "fdgc_enabled": false
+        }
+      }
+    },
+    {
+      "name_template": "r18_pra_seed{seed}",
+      "role": "pra",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "class-preserving prototype recombination ablation",
+      "base_config": "configs/fdxmp_pra_split.yaml",
+      "config_template": "configs/protocol_b/r18_pra_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/pra/seed{seed}",
+      "overrides": {
+        "model_args": {
+          "fdgc_enabled": false
+        }
+      }
+    },
+    {
+      "name_template": "r18_weighted_pra_seed{seed}",
+      "role": "weighted_pra",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "joint normalized weighted CTC and prototype recombination",
+      "base_config": "configs/fdxmp_pra_split.yaml",
+      "config_template": "configs/protocol_b/r18_weighted_pra_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/weighted_pra/seed{seed}",
+      "overrides": {
+        "loss_weights": {
+          "SeqCTC": 1.0,
+          "ConvCTC": 1.0,
+          "WeightedCTC": 0.5,
+          "ProtoAlign": 0.01,
+          "PRA": 0.05
+        },
+        "model_args": {
+          "fdgc_enabled": false,
+          "weighted_ctc_enabled": true
+        }
+      }
+    },
+    {
+      "name_template": "r18_fdgc_seed{seed}",
+      "role": "fdgc",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "signer-free visual prototype plus FDGC calibration",
+      "base_config": "configs/fdxmp_v3_split.yaml",
+      "config_template": "configs/protocol_b/r18_fdgc_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/fdgc/seed{seed}"
+    },
+    {
+      "name_template": "r18_no_signer_seed{seed}",
+      "role": "no_signer",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "prototype channel without signer conditioning or FDGC",
+      "base_config": "configs/fdxmp_no_signer_split.yaml",
+      "config_template": "configs/protocol_b/r18_no_signer_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/no_signer/seed{seed}",
+      "overrides": {
+        "model_args": {
+          "fdgc_enabled": false,
+          "signer_film": false
+        }
+      }
+    },
+    {
+      "name_template": "r18_real_signer_seed{seed}",
+      "role": "real_signer",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "dataset signer IDs with conditional invariance",
+      "base_config": "configs/fdxmp_h1_split.yaml",
+      "config_template": "configs/protocol_b/r18_real_signer_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/real_signer/seed{seed}"
+    },
+    {
+      "name_template": "r18_pseudo_signer_seed{seed}",
+      "role": "pseudo_signer",
+      "backbone": "resnet18",
+      "comparison_group": "resnet18",
+      "purpose": "cluster-derived signer proxy with stability audit",
+      "base_config": "configs/fdxmp_pseudo_signer_split.yaml",
+      "config_template": "configs/protocol_b/r18_pseudo_signer_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet18/pseudo_signer/seed{seed}",
+      "overrides": {
+        "feeder_args": {
+          "signer_map_path": "preprocess/phoenix2014/pseudo_signers/seed{seed}/signer_map.json"
+        }
+      }
+    },
+    {
+      "name_template": "r34_baseline_seed{seed}",
+      "role": "baseline",
+      "backbone": "resnet34",
+      "comparison_group": "resnet34",
+      "purpose": "ResNet34 SeqCTC control, reported separately",
+      "base_config": "configs/baseline_split.yaml",
+      "config_template": "configs/protocol_b/r34_baseline_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet34/baseline/seed{seed}",
+      "overrides": {
+        "model_args": {
+          "c2d_type": "resnet34"
+        }
+      }
+    },
+    {
+      "name_template": "r34_vac_ctc_seed{seed}",
+      "role": "vac_ctc",
+      "backbone": "resnet34",
+      "comparison_group": "resnet34",
+      "purpose": "ResNet34 VAC CTC control, reported separately",
+      "base_config": "configs/vac_ctc_split.yaml",
+      "config_template": "configs/protocol_b/r34_vac_ctc_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet34/vac_ctc/seed{seed}",
+      "overrides": {
+        "model_args": {
+          "c2d_type": "resnet34"
+        }
+      }
+    },
+    {
+      "name_template": "r34_fdgc_seed{seed}",
+      "role": "fdgc",
+      "backbone": "resnet34",
+      "comparison_group": "resnet34",
+      "purpose": "ResNet34 prototype and FDGC arm, reported separately",
+      "base_config": "configs/fdxmp_v3_split.yaml",
+      "config_template": "configs/protocol_b/r34_fdgc_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet34/fdgc/seed{seed}",
+      "overrides": {
+        "model_args": {
+          "c2d_type": "resnet34"
+        }
+      }
+    },
+    {
+      "name_template": "r34_weighted_pra_seed{seed}",
+      "role": "weighted_pra",
+      "backbone": "resnet34",
+      "comparison_group": "resnet34",
+      "purpose": "ResNet34 joint weighted CTC and PRA arm, reported separately",
+      "base_config": "configs/fdxmp_pra_split.yaml",
+      "config_template": "configs/protocol_b/r34_weighted_pra_seed{seed}.yaml",
+      "work_dir_template": "work_dir/fd_xmp_v3/B_protocol/resnet34/weighted_pra/seed{seed}",
+      "overrides": {
+        "loss_weights": {
+          "SeqCTC": 1.0,
+          "ConvCTC": 1.0,
+          "WeightedCTC": 0.5,
+          "ProtoAlign": 0.01,
+          "PRA": 0.05
+        },
+        "model_args": {
+          "c2d_type": "resnet34",
+          "fdgc_enabled": false,
+          "weighted_ctc_enabled": true
+        }
+      }
+    }
+  ]
+}

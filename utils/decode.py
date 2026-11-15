@@ -7,17 +7,76 @@ import numpy as np
 from itertools import groupby
 import torch.nn.functional as F
 
+from .ngram_rescorer import NGramRescorer
+
+
+def _collapsed_beam(beam, length, blank_id):
+    values = beam[:int(length)].tolist()
+    if values:
+        values = [value for value, _ in groupby(values)]
+    return [int(value) for value in values if int(value) != blank_id]
+
+
+def _select_beam_index(
+    sequences,
+    ctc_scores,
+    rescorer=None,
+    alpha=0.0,
+    beta=0.0,
+):
+    if rescorer is None or not sequences:
+        return 0
+    best_index = 0
+    best_score = float("-inf")
+    for index, sequence in enumerate(sequences):
+        ctc_log_probability = -float(ctc_scores[index])
+        score = (
+            ctc_log_probability
+            + float(alpha) * rescorer.score(sequence)
+            + float(beta) * len(sequence)
+        )
+        if score > best_score:
+            best_score = score
+            best_index = index
+    return best_index
+
 
 class Decode(object):
-    def __init__(self, gloss_dict, num_classes, search_mode, blank_id=0):
+    def __init__(
+        self,
+        gloss_dict,
+        num_classes,
+        search_mode,
+        blank_id=0,
+        beam_width=10,
+        num_processes=10,
+        rescorer_path=None,
+        rescorer_alpha=0.0,
+        rescorer_beta=0.0,
+    ):
         self.i2g_dict = dict((v[0], k) for k, v in gloss_dict.items())
         self.g2i_dict = {v: k for k, v in self.i2g_dict.items()}
         self.num_classes = num_classes
         self.search_mode = search_mode
         self.blank_id = blank_id
+        self.rescorer_alpha = float(rescorer_alpha)
+        self.rescorer_beta = float(rescorer_beta)
+        self.rescorer = (
+            NGramRescorer.from_json(rescorer_path)
+            if rescorer_path
+            else None
+        )
+        if self.rescorer is not None and self.rescorer.vocabulary_size != num_classes:
+            raise ValueError(
+                "rescorer vocabulary size does not match the classifier"
+            )
         vocab = [chr(x) for x in range(20000, 20000 + num_classes)]
-        self.ctc_decoder = ctcdecode.CTCBeamDecoder(vocab, beam_width=10, blank_id=blank_id,
-                                                    num_processes=10)
+        self.ctc_decoder = ctcdecode.CTCBeamDecoder(
+            vocab,
+            beam_width=int(beam_width),
+            blank_id=blank_id,
+            num_processes=int(num_processes),
+        )
 
     def decode(self, nn_output, vid_lgt, batch_first=True, probs=False):
         if not batch_first:
@@ -39,14 +98,30 @@ class Decode(object):
         if not probs:
             nn_output = nn_output.softmax(-1).cpu()
         vid_lgt = vid_lgt.cpu()
-        beam_result, beam_scores, timesteps, out_seq_len = self.ctc_decoder.decode(nn_output, vid_lgt)
+        beam_result, beam_scores, timesteps, out_seq_len = (
+            self.ctc_decoder.decode(nn_output, vid_lgt)
+        )
         ret_list = []
         for batch_idx in range(len(nn_output)):
-            first_result = beam_result[batch_idx][0][:out_seq_len[batch_idx][0]]
-            if len(first_result) != 0:
-                first_result = torch.stack([x[0] for x in groupby(first_result)])
-            ret_list.append([(self.i2g_dict[int(gloss_id)], idx) for idx, gloss_id in
-                             enumerate(first_result)])
+            sequences = [
+                _collapsed_beam(
+                    beam_result[batch_idx][beam_idx],
+                    out_seq_len[batch_idx][beam_idx],
+                    self.blank_id,
+                )
+                for beam_idx in range(beam_result.size(1))
+            ]
+            selected = _select_beam_index(
+                sequences,
+                beam_scores[batch_idx],
+                self.rescorer,
+                self.rescorer_alpha,
+                self.rescorer_beta,
+            )
+            ret_list.append([
+                (self.i2g_dict[int(gloss_id)], index)
+                for index, gloss_id in enumerate(sequences[selected])
+            ])
         return ret_list
 
     def MaxDecode(self, nn_output, vid_lgt):

@@ -49,6 +49,11 @@ def get_parser():
         default=100,
         help='the interval for evaluating models (#epochs)')
     parser.add_argument(
+        '--checkpoint-split',
+        choices=['cal', 'dev'],
+        default='dev',
+        help='split used for in-training checkpoint selection')
+    parser.add_argument(
         '--print-log',
         type=str2bool,
         default=True,
@@ -60,6 +65,42 @@ def get_parser():
         help='the interval for printing messages (#iteration)')
     parser.add_argument(
         '--evaluate-tool', default="python", help='sclite or python')
+    parser.add_argument(
+        '--eval-splits',
+        nargs='+',
+        default=['dev', 'test'],
+        choices=['cal', 'dev', 'test'],
+        help='splits evaluated by main.py --phase test')
+    parser.add_argument(
+        '--load-splits',
+        nargs='+',
+        default=None,
+        choices=['train', 'train_eval', 'cal', 'dev', 'test'],
+        help='optional subset of dataset views to construct')
+    parser.add_argument(
+        '--difficulty-report',
+        default=None,
+        help='optional frequency report used to derive FDGC difficulty inputs')
+    parser.add_argument(
+        '--fdgc-epochs',
+        type=int,
+        default=10,
+        help='number of FDGC calibration epochs')
+    parser.add_argument(
+        '--fdgc-lr',
+        type=float,
+        default=0.001,
+        help='learning rate for FDGC calibration')
+    parser.add_argument(
+        '--fdgc-weight-decay',
+        type=float,
+        default=0.0001,
+        help='weight decay for FDGC calibration')
+    parser.add_argument(
+        '--fdgc-objective',
+        choices=['viterbi', 'ctc'],
+        default='viterbi',
+        help='FDGC fitting objective: frozen Viterbi frames or standard CTC')
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # feeder
@@ -74,6 +115,11 @@ def get_parser():
         '--dataset-info',
         default=dict(),
         help='data loader will be used'
+    )
+    parser.add_argument(
+        '--split-manifest',
+        default=None,
+        help='optional audited JSON manifest selecting train/cal/sel/test samples'
     )
     parser.add_argument(
         '--num-worker',

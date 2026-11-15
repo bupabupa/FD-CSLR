@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+
+# Editors and local automation
+.vscode/
+.codex_backups/
+*.swp
+*.swo
+
+# Experiment outputs
+work_dir/
+*.log
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.npz
+*.pkl
+
+# Local datasets and external binaries
+dataset/phoenix2014/
+preprocess/phoenix2014/
+software/
+
+# Local backup files
+*.codex-bak-*
+*.bak
